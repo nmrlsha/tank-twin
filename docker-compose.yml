@@ -1,4 +1,5 @@
 # Backend services for the water tank digital twin.
+# First time only:  mkdir -p data
 # Start:  docker compose up -d --build
 # Logs:   docker compose logs -f
 # Stop:   docker compose down
@@ -31,6 +32,31 @@ services:
       ASSET_ID: tank_01
       PUBLISH_HZ: "1.0"
       SCENARIO: normal
+    depends_on:
+      broker:
+        condition: service_healthy
+    restart: unless-stopped
+
+  processor:
+    build: ./processor
+    container_name: tank-processor
+    # Run as your own Ubuntu user so files in ./data belong to you, not root.
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      MQTT_HOST: broker
+      MQTT_PORT: "1883"
+      ASSET_ID: tank_01
+      DB_PATH: /data/tank.db
+      MODEL_PATH: /models/level_model.joblib
+      HTTP_PORT: "8000"
+      BACKUP_DIR: /data/backups
+      BACKUP_INTERVAL_S: "600"   # backup every 10 min
+      BACKUP_KEEP: "6"           # keep the newest 6 backups
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data                 # SQLite database and backups (on the host)
+      - ./ai/models:/models:ro       # trained model (read-only)
     depends_on:
       broker:
         condition: service_healthy

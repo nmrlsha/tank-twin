@@ -1,0 +1,6 @@
+paho-mqtt==2.1.0
+# Same versions must be used to train the model (ai/), or joblib may fail to load it.
+scikit-learn==1.9.1
+numpy==2.5.3
+scipy==1.18.1
+joblib==1.6.0

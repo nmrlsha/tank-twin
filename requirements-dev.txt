@@ -1,3 +1,8 @@
-# For running tests on the host (not needed inside the containers)
+# For running tests and training on the host (not needed inside the containers).
+# ML versions must match processor/requirements.txt so saved models load in Docker.
 paho-mqtt==2.1.0
 pytest==8.3.4
+scikit-learn==1.9.1
+numpy==2.5.3
+scipy==1.18.1
+joblib==1.6.0
