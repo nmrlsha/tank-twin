@@ -1,0 +1,40 @@
+# Backend services for the water tank digital twin.
+# Start:  docker compose up -d --build
+# Logs:   docker compose logs -f
+# Stop:   docker compose down
+#
+# The Omniverse Kit app runs on the desktop (not in Docker) and connects
+# to the broker at localhost:1883.
+
+services:
+  broker:
+    image: eclipse-mosquitto:2.0.20
+    container_name: tank-broker
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./broker/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - broker-data:/mosquitto/data
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/broker/uptime", "-C", "1", "-W", "3"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  simulator:
+    build: ./simulator
+    container_name: tank-simulator
+    environment:
+      MQTT_HOST: broker        # service name on the Docker network
+      MQTT_PORT: "1883"
+      ASSET_ID: tank_01
+      PUBLISH_HZ: "1.0"
+      SCENARIO: normal
+    depends_on:
+      broker:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  broker-data:
